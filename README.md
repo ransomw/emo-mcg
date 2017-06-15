@@ -1,6 +1,6 @@
 # emo-mcg
 
-[mcguirk](doc/img/coach.jpg)
+![mcguirk](doc/img/coach.jpg)
 
 ### motivation
 
