@@ -36,7 +36,7 @@ data-collection setup.  it (the experimental setup in `exp/`) is
 written as a webapp in Clojure.
 
 the Clojure project still retains the form of the
-[Chestnut](http://plexus.github.io/chestnut/) 0.14.0 (66af6f40)
+[Chestnut](https://github.com/plexus/chestnut) 0.14.0 (66af6f40)
 template used to generate it.  In particular,
 
 ```clojure
