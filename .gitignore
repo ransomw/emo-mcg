@@ -1,0 +1,16 @@
+*~
+*.class
+*.jar
+/exp/.lein-*
+/exp/.nrepl-port
+/exp/.repl
+/exp/checkouts/
+/exp/classes/
+/exp/lib/
+/exp/log/
+/exp/out/
+/exp/resources/public/js/compiled/**
+/exp/target/
+/exp/figwheel_server.log
+/exp/pom.xml
+/exp/pom.xml.asc
