@@ -1,7 +1,9 @@
 (ns user
-  (:require [emcg.server]
-            [ring.middleware.reload :refer [wrap-reload]]
-            [figwheel-sidecar.repl-api :as figwheel]))
+  (:require
+   [emcg.server]
+   [ring.middleware.reload :refer [wrap-reload]]
+   [figwheel-sidecar.repl-api :as figwheel]
+   [clojure.test :refer [run-tests]]))
 
 ;; Let Clojure warn you when it needs to reflect on types, or when it does math
 ;; on unboxed numbers. In both cases you should add type annotations to prevent
@@ -18,6 +20,10 @@
 
 ;;;;;;; strictly sand
 
+(defn require-test []
+  (require 'emcg.db-test :reload)
+  )
+
 (defn init-require []
   (require '(emcg [rand :as mr]) :reload)
   (require '(emcg.db [expone :as eo]) :reload)
@@ -29,7 +35,7 @@
   (require '(emcg [expone :refer [emo-stim-filenames mcg-stim-filenames]
                    :rename {emo-stim-filenames esf
                             mcg-stim-filenames msf}]))
-
+  (require-test)
   )
 
 (init-require)
@@ -41,11 +47,16 @@
   (require 'emcg.db :reload)
   (require 'emcg.hroutes :reload)
   (require 'emcg.routes :reload)
+  (require-test)
   )
+
+(defn run-all-tests []
+  (run-tests 'emcg.db-test))
 
 (def rreq reload-require)
 (def rdb db/reset-db!)
 (def brep browser-repl)
+(def test run-all-tests)
 
 ;;;;;;
 

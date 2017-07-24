@@ -40,11 +40,12 @@ the Clojure project still retains the form of the
 template used to generate it.  In particular,
 
 ```clojure
+(test)
 (rdb) ;; database reset
 (run)
 ```
 
-in `lein repl` will start a local demo on port `3449`.
+in `lein repl` will run tests and start a local demo on port `3449`.
 see `exp/dev/user.clj` for more.
 
 ### thanks
