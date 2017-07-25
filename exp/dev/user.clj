@@ -22,6 +22,7 @@
 
 (defn require-test []
   (require 'emcg.db-test :reload)
+  (require 'emcg.routes-test :reload)
   )
 
 (defn init-require []
@@ -51,7 +52,9 @@
   )
 
 (defn run-all-tests []
-  (run-tests 'emcg.db-test))
+  (run-tests 'emcg.db-test)
+  (run-tests 'emcg.routes-test)
+  )
 
 (def rreq reload-require)
 (def rdb db/reset-db!)
