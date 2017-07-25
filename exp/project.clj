@@ -70,7 +70,11 @@
                            :source-map-timestamp true}}
 
                {:id "test"
-                :source-paths ["src/cljs" "test/cljs" "src/cljc" "test/cljc"]
+                :source-paths ["src/cljs" "test/cljs" "src/cljc" "test/cljc"
+                               ;; user.clj build fails otherwise
+                               ;; .. s'th about :source-paths :test-paths
+                               ;; and the require of tests in user.clj
+                               "test/clj"]
                 :compiler {:output-to "resources/public/js/compiled/testable.js"
                            :main emcg.test-runner
                            :optimizations :none}}
