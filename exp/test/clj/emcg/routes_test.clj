@@ -5,6 +5,7 @@
 
    [clojure.test :refer :all]
    [clojure.edn :as edn]
+   [clojure.string :as str]
    [ring.mock.request :as mock]
 
    [emcg.server :as s]
@@ -29,9 +30,8 @@
 (use-fixtures :each routes-fixture)
 
 (deftest init-exp
-  (let [res
-        (test-handler
-         (mock/request :post "/exp"))
+  (let [res (test-handler
+             (mock/request :post "/exp"))
         body (edn/read-string (:body res))]
     (is (not (nil? res)))
     (is (map? res))
@@ -62,3 +62,53 @@
       (is (= 1 (count (set (map count (map :mcg-ids body))))))
       (is (= 1 (count (set (map count (map :av-idxs body))))))
       )))
+
+(deftest get-stim-data
+  (let [res (test-handler
+             (mock/request :post "/exp"))
+        body (edn/read-string (:body res))
+        {exp-id :id exp-defn :defn} body]
+    (->>
+     exp-defn
+     (map
+      (fn [{:keys [emo-id mcg-ids av-idxs]}]
+        (let [mcg-endpoints
+              (map
+               (partial str
+                        (str "/exp/" exp-id "/emo/" emo-id "/mcg/"))
+               mcg-ids)
+              emo-res
+              (test-handler
+               (mock/request :get (str "/exp/" exp-id "/emo/" emo-id)))
+              mcg-resps
+              (map #(test-handler (mock/request :get %)) mcg-endpoints)
+              check-vid-resp
+              (fn [res]
+                (is (= "video"
+                       (first (str/split
+                               (get (:headers res) "Content-Type")
+                               #"/")))))
+              ]
+          (check-vid-resp emo-res)
+          (doall (map check-vid-resp mcg-resps))
+        )))
+     doall)
+    ))
+
+(deftest init-exp-db
+  (let [res (test-handler
+             (mock/request :post "/exp"))
+        body (edn/read-string (:body res))
+        {exp-id :id exp-defn-http :defn} body
+        exp-defn-db (db/get-exp exp-id)]
+    (->>
+     exp-defn-db
+     (map
+      (fn [{:keys [emo-id emo-idx seq-num mcg-trials]}]
+        (let [{emo-id-http :emo-id
+               mcg-ids :mcg-ids
+               av-idxs :av-idxs} (nth exp-defn-http seq-num)]
+          (is (= emo-id emo-id-http))
+        )))
+     doall)
+    ))
