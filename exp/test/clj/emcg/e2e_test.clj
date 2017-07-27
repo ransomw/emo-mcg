@@ -14,7 +14,8 @@
       (wrap-cors
        :access-control-allow-origin [#".*"]
        :access-control-allow-methods [:get :put :post :delete])
-      ))
+      )
+  )
 
 ;; server start/stop lifted from dnolen's SO post
 (defonce server
@@ -33,6 +34,30 @@
     (f) ;; 2. run the test, i,e. end-to-end-suite
     (.stop server))) ;; 3. Stop the backend system
 
+
+(deftest js-logic-suite
+  (let [compiler-opts {:main 'emcg.e2e-runner
+                       :target :nodejs
+                       :output-to "out/js_logic_test.js"
+                       :output-dir "out"
+                       :asset-path "out"
+                       :optimizations :none}]
+    ;; Compile the ClojureScript tests
+    (cljs/build (apply cljs/inputs ["src/cljs"
+                                    "src/cljc"
+                                    "test/cljs"
+                                    "env/test/cljs"
+                                    ])
+                compiler-opts)
+    ;; Run the ClojureScript tests and check the result
+    (is (zero? (:exit
+                (doo/run-script
+                 :node
+                 compiler-opts
+                 {:paths {:node "node"}}
+                 ))))))
+
+
 (deftest end-to-end-suite
   (let [compiler-opts {:main 'emcg.e2e-runner
                        :output-to "out/e2e_test.js"
@@ -47,7 +72,17 @@
                                     ])
                 compiler-opts)
     ;; Run the ClojureScript tests and check the result
-    (is (zero? (:exit (doo/run-script :phantom compiler-opts {}))))))
+    (is (zero? (:exit
+                (doo/run-script
+                 :phantom
+                 compiler-opts
+                 ;; "--web-security=false" enables CORS
+                 {:paths {:phantom
+                          "phantomjs --web-security=false"
+                          }}
+                 ))))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
