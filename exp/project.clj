@@ -29,6 +29,9 @@
                  ;; error with ring-middleware-format add
                  [cheshire "5.7.0"]
                  [ring-middleware-format "0.7.2"]
+                 ;; todo: dedupe plugin?
+                 ;; duplicates plugin version
+                 [lein-doo "0.1.6"]
                  ]
 
   :plugins [[lein-cljsbuild "1.1.3"]

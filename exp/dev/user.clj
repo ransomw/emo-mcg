@@ -23,6 +23,7 @@
 (defn require-test []
   (require 'emcg.db-test :reload)
   (require 'emcg.routes-test :reload)
+  (require 'emcg.e2e-test :reload)
   )
 
 (defn init-require []
