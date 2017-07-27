@@ -48,7 +48,7 @@
   :uberjar-name "emcg.jar"
 
   ;; Use `lein run` if you just want to start a HTTP server, without figwheel
-  :main emcg.server
+  :main "emcg.server"
 
   ;; nREPL by default starts in the :main namespace, we want to start in `user`
   ;; because that's where our development helper functions like (run) and
@@ -60,7 +60,8 @@
 
   :cljsbuild {:builds
               [{:id "app"
-                :source-paths ["src/cljs" "src/cljc"]
+                :source-paths ["src/cljs" "src/cljc"
+                               "env/prod/cljs"]
 
                 :figwheel true
                 ;; Alternatively, you can configure a function to run every time figwheel reloads.
@@ -77,13 +78,15 @@
                                ;; user.clj build fails otherwise
                                ;; .. s'th about :source-paths :test-paths
                                ;; and the require of tests in user.clj
-                               "test/clj"]
+                               "test/clj"
+                               "env/test/cljs"]
                 :compiler {:output-to "resources/public/js/compiled/testable.js"
                            :main emcg.test-runner
                            :optimizations :none}}
 
                {:id "min"
-                :source-paths ["src/cljs" "src/cljc"]
+                :source-paths ["src/cljs" "src/cljc"
+                               "env/prod/cljs"]
                 :jar true
                 :compiler {:main emcg.core
                            :output-to "resources/public/js/compiled/emcg.js"

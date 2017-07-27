@@ -35,15 +35,15 @@
 
 (deftest end-to-end-suite
   (let [compiler-opts {:main 'emcg.e2e-runner
-                       :output-to "out/test.js"
+                       :output-to "out/e2e_test.js"
                        :output-dir "out"
                        :asset-path "out"
                        :optimizations :none}]
     ;; Compile the ClojureScript tests
     (cljs/build (apply cljs/inputs ["src/cljs"
+                                    "src/cljc"
                                     "test/cljs"
-                                    ;; YYY
-                                    ;; "test/cljs-app-config"
+                                    "env/test/cljs"
                                     ])
                 compiler-opts)
     ;; Run the ClojureScript tests and check the result
