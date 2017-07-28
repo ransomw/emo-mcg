@@ -1,3 +1,3 @@
 (ns emcg.config)
 
-(def base-url "/emcg")
+(def base-url "")

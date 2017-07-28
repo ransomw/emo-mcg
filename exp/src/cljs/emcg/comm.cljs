@@ -4,8 +4,12 @@
    [clojure.string :as s]
    [cljs-http.client :as http]
    [cljs.core.async :refer [chan <! >! close!]]
-   [emcg.config :refer [base-url]]
+   [emcg.config :refer [base-url]
+    :rename {base-url
+             base-url-server}]
    ))
+
+(def base-url (s/join [base-url-server "/emcg"]))
 
 ;; todo: close chans in go blocks after they're written to
 ;;  (if no more writes are intended), since closing a channel
