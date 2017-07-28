@@ -1,5 +1,6 @@
 (ns emcg.e2e-test
   (:require
+   [clojure.string :as s]
    [clojure.test :refer :all]
    [doo.core :as doo]
    [cljs.build.api :as cljs]
@@ -35,7 +36,7 @@
     (.stop server))) ;; 3. Stop the backend system
 
 
-(deftest js-logic-suite
+(defn js-logic-suite []
   (let [compiler-opts {:main 'emcg.e2e-runner
                        :target :nodejs
                        :output-to "out/js_logic_test.js"
@@ -72,15 +73,25 @@
                                     ])
                 compiler-opts)
     ;; Run the ClojureScript tests and check the result
-    (is (zero? (:exit
-                (doo/run-script
-                 :phantom
-                 compiler-opts
-                 ;; "--web-security=false" enables CORS
-                 {:paths {:phantom
-                          "phantomjs --web-security=false"
-                          }}
-                 ))))))
+    (is
+     (zero?
+      (:exit
+       (doo/run-script
+        :phantom
+        compiler-opts
+        {:paths
+         {:phantom
+          (s/join " "
+                  [
+                   "phantomjs"
+                   ;; _supposedly_ enables CORS
+                   "--web-security=false"
+                   ;; "--debug=true"
+                   "--local-to-remote-url-access=true"
+                   ])
+          }
+         :debug true}
+        ))))))
 
 
 

@@ -23,6 +23,9 @@
                            "https://developer.mozilla.org/en-US/docs/Web/CSS/line-height?raw&section=Summary"
                            {:with-credentials? false}))
              ]
+
+         ;; (println (.-outerHTML (aget (.-children js/document) 0)))
+
          (println response)
          (done)
          ))))

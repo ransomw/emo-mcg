@@ -8,6 +8,6 @@
 
 (doo-tests
  ;; 'emcg.comm-test
- ;; 'emcg.cors-iss-test
- 'emcg.e2e-test-test
+ 'emcg.cors-iss-test
+ ;; 'emcg.e2e-test-test
  )
