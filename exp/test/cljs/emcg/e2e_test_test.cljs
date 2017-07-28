@@ -17,6 +17,10 @@
    :after #(tu/unmount! @container)})
 
 (deftest start-the-app
+  (testing "First view is loading"
+    (is (= :loading @main/state))
+    ;; (println (.-outerHTML (aget (.-children js/document) 0)))
+    (is (some? (.getElementById js/document "loading"))))
   (async
    done
    ;; Start the app
@@ -25,10 +29,6 @@
     js/window
     (fn []
       (testing "Then the app is started"
-
-        ;; (println (.-outerHTML (aget (.-children js/document) 0)))
-        (is (some? (.getElementById js/document "loading")))
-
         (is (= :started @main/state)))
       (is (some? (.getElementById js/document "done")))
       (done))

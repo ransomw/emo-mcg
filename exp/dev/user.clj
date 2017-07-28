@@ -57,6 +57,9 @@
   (run-tests 'emcg.routes-test)
   )
 
+(defn run-doo-tests []
+  (run-tests 'emcg.e2e-test))
+
 (def rreq reload-require)
 (def rdb db/reset-db!)
 (def brep browser-repl)
