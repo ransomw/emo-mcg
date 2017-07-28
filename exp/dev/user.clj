@@ -60,7 +60,7 @@
 (def rreq reload-require)
 (def rdb db/reset-db!)
 (def brep browser-repl)
-(def test run-all-tests)
+(def ttest run-all-tests)
 
 ;;;;;;
 
