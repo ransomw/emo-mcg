@@ -35,17 +35,22 @@ all that exists at time of writing is the beginnings of a
 data-collection setup.  it (the experimental setup in `exp/`) is
 written as a webapp in Clojure.
 
-the Clojure project still retains the form of the
+the Clojure project still retains much of the form of the
 [Chestnut](https://github.com/plexus/chestnut) 0.14.0 (66af6f40)
-template used to generate it.  In particular,
+template used to generate it.
+
+Most extensions have been added to `dev/user.clj` such that
+the `lein repl` command is the main point of entry for development.
+In particular, the following functions are available:
 
 ```clojure
+(rtest) ;; reload and run tests
 (rdb) ;; database reset
-(run)
+(run) ;; run data collection setup w/ figwheel ... see localhost:3449
+(stop) ;; stop figwheel
+(run-devcards) ;; run devcards "test", on 3449 again
+(brep) ;; browser repl --- available whenever figwheel is spinning
 ```
-
-in `lein repl` will start a local demo on port `3449`.
-see `exp/dev/user.clj` for more.
 
 ### thanks
 

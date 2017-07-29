@@ -11,6 +11,7 @@
                  [com.cognitect/transit-clj "0.8.285"]
                  [ring "1.4.0"]
                  [ring/ring-defaults "0.2.0"]
+                 [ring/ring-mock "0.3.1"]
                  [bk/ring-gzip "0.1.1"]
                  [ring.middleware.logger "0.5.0"]
                  [compojure "1.5.0"]
@@ -28,6 +29,10 @@
                  ;; error with ring-middleware-format add
                  [cheshire "5.7.0"]
                  [ring-middleware-format "0.7.2"]
+                 ;; todo: dedupe plugin?
+                 ;; duplicates plugin version
+                 [lein-doo "0.1.6"]
+                 [devcards "0.2.3"]
                  ]
 
   :plugins [[lein-cljsbuild "1.1.3"]
@@ -39,12 +44,15 @@
 
   :test-paths ["test/clj" "test/cljc"]
 
-  :clean-targets ^{:protect false} [:target-path :compile-path "resources/public/js"]
+  :clean-targets ^{:protect false}
+  [:target-path :compile-path
+   "resources/public/js"
+   "resources/devcards/js"]
 
   :uberjar-name "emcg.jar"
 
   ;; Use `lein run` if you just want to start a HTTP server, without figwheel
-  :main emcg.server
+  :main "emcg.server"
 
   ;; nREPL by default starts in the :main namespace, we want to start in `user`
   ;; because that's where our development helper functions like (run) and
@@ -56,26 +64,46 @@
 
   :cljsbuild {:builds
               [{:id "app"
-                :source-paths ["src/cljs" "src/cljc"]
-
+                :source-paths ["src/cljs" "src/cljc" "env/prod/cljs"]
                 :figwheel true
-                ;; Alternatively, you can configure a function to run every time figwheel reloads.
+                ;; Alternatively,
                 ;; :figwheel {:on-jsload "emcg.core/on-figwheel-reload"}
-
                 :compiler {:main emcg.core
-                           :asset-path "js/compiled/out"
-                           :output-to "resources/public/js/compiled/emcg.js"
-                           :output-dir "resources/public/js/compiled/out"
+                           :asset-path
+                           "js/compiled/out"
+                           :output-to
+                           "resources/public/js/compiled/emcg.js"
+                           :output-dir
+                           "resources/public/js/compiled/out"
                            :source-map-timestamp true}}
 
+               {:id "devcards"
+                :source-paths ["src/cljs" "src/cljc"
+                               "env/test/cljs"
+                               "test/cljs" "test/cljc"]
+                :figwheel {:devcards true}
+                :compiler
+                {
+                 :main emcg.devcards
+                 :asset-path
+                 "js/compiled/devcards_out"
+                 :output-to
+                 ;; matches http-server-root for figwheel
+                 "resources/devcards/js/compiled/emcg_devcards.js"
+                 :output-dir
+                 "resources/devcards/js/compiled/devcards_out"
+                 :source-map-timestamp true}}
+
                {:id "test"
-                :source-paths ["src/cljs" "test/cljs" "src/cljc" "test/cljc"]
+                :source-paths ["src/cljs" "test/cljs"
+                               "src/cljc" "test/cljc"]
                 :compiler {:output-to "resources/public/js/compiled/testable.js"
                            :main emcg.test-runner
                            :optimizations :none}}
 
                {:id "min"
-                :source-paths ["src/cljs" "src/cljc"]
+                :source-paths ["src/cljs" "src/cljc"
+                               "env/prod/cljs"]
                 :jar true
                 :compiler {:main emcg.core
                            :output-to "resources/public/js/compiled/emcg.js"
@@ -99,7 +127,9 @@
              ;; assets and API endpoints can all be accessed on the same host
              ;; and port. If you prefer a separate server process then take this
              ;; out and start the server with `lein run`.
-             :ring-handler user/http-handler
+
+             ;; YYY passing option in user.clj
+             ;; :ring-handler user/http-handler
 
              ;; Start an nREPL server into the running figwheel process. We
              ;; don't do this, instead we do the opposite, running figwheel from
@@ -121,12 +151,12 @@
   :doo {:build "test"}
 
   :profiles {:dev
-             {:dependencies [[figwheel "0.5.4-4"]
-                             [figwheel-sidecar "0.5.4-4"]
+             {:dependencies [[figwheel "0.5.11"]
+                             [figwheel-sidecar "0.5.11"]
                              [com.cemerick/piggieback "0.2.1"]
                              [org.clojure/tools.nrepl "0.2.12"]]
 
-              :plugins [[lein-figwheel "0.5.4-4"]
+              :plugins [[lein-figwheel "0.5.11"]
                         [lein-doo "0.1.6"]]
 
               :source-paths ["dev"]

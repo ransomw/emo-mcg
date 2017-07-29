@@ -4,9 +4,8 @@
    [clojure.string :as s]
    [cljs-http.client :as http]
    [cljs.core.async :refer [chan <! >! close!]]
+   [emcg.config :refer [base-url]]
    ))
-
-(def ^{:private true} base-url "/emcg")
 
 ;; todo: close chans in go blocks after they're written to
 ;;  (if no more writes are intended), since closing a channel

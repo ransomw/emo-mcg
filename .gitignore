@@ -10,6 +10,7 @@
 /exp/log/
 /exp/out/
 /exp/resources/public/js/compiled/**
+/exp/resources/devcards/js/compiled/**
 /exp/target/
 /exp/figwheel_server.log
 /exp/pom.xml
