@@ -12,6 +12,7 @@
    [emcg.routes :as r]
    [emcg.db :as db]
    [emcg.expone :refer [exp-stim-config]]
+   [emcg.db.expone :refer [get-mcg-entry]]
    ))
 
 (def test-handler
@@ -111,4 +112,35 @@
           (is (= emo-id emo-id-http))
         )))
      doall)
+    ))
+
+(deftest mcg-resp-test
+  (let [res-init-exp (test-handler
+                      (mock/request :post "/exp"))
+        body (edn/read-string (:body res-init-exp))
+        {exp-id :id exp-defn :defn} body
+        emo-id (-> exp-defn (first) (:emo-id))
+        mcg-id (-> exp-defn (first) (:mcg-ids) (first))
+        [av-idx1 av-idx2] (-> exp-defn (first) (:av-idxs) (first))
+        post-resp-url (str/join ["/exp/" exp-id "/emo/" emo-id
+                                 "/mcg/" mcg-id "/resp"])
+        mcg-entry-before (get-mcg-entry db/db-spec mcg-id)
+        res (test-handler
+             (-> (mock/request :post post-resp-url)
+                 (mock/header :content-type "application/edn")
+                 ;; without casting to a string, ring-mock
+                 ;; will set content-type to form data
+                 (mock/body (str {:idx-resp av-idx1}))
+                 )
+             )
+        mcg-entry-after (get-mcg-entry db/db-spec mcg-id)
+        ]
+    (is (integer? exp-id))
+    (is (integer? emo-id))
+    (is (integer? mcg-id))
+    (is (integer? av-idx1))
+    (is (not (nil? res)))
+    (is (= 200 (:status res)))
+    (is (nil? (:idx-resp mcg-entry-before)))
+    (is (= av-idx1 (:idx-resp mcg-entry-after)))
     ))

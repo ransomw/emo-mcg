@@ -2,6 +2,7 @@
   (:require
    [clojure.test :refer :all]
    [emcg.db :as db]
+   [emcg.db.expone :as eone]
    [emcg.expone :refer [exp-stim-config]]
    ))
 
@@ -57,3 +58,22 @@
           ))
        doall)
     )))
+
+(deftest mcg-res-test
+  (let [num-emo-stim 2
+        exp-id (db/init-exp! num-emo-stim)]
+    (let [{:keys [mcg-id idx-v]} (-> (db/get-exp 1)
+                                     (first)
+                                     (get :mcg-trials)
+                                     (first))]
+      (let [mcg-entry (eone/get-mcg-entry db/db-spec mcg-id)]
+        (is (map? mcg-entry))
+        (is (= (set (keys mcg-entry))
+               (set [:idx-a-stim :idx-v-stim :idx-resp])))
+        (is (nil? (:idx-resp mcg-entry)))
+        )
+      (is (integer? (db/set-mcg-res! mcg-id idx-v)))
+      (let [mcg-entry (eone/get-mcg-entry db/db-spec mcg-id)]
+        (is (= idx-v (:idx-resp mcg-entry)))
+        )
+      )))

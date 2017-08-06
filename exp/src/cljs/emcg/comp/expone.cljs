@@ -5,6 +5,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
 
+   [emcg.data-munge :refer [get-mcg-idx-in-block]]
    [emcg.act :as act]
    ))
 
@@ -83,8 +84,41 @@
        )
       )))
 
+;;;;;;;;;;;;; exp-comp
+;;; duplicates dupe dedupe data-munge/get-app-state-stim-id-head here
+(defn emo-stim? [exp-comp-props]
+  (let [{:keys [exp-def stim-infos num-res]} exp-comp-props]
+    (= (:mcg num-res)
+       (reduce
+        + (map (comp count :mcg-ids)
+               (take (:emo num-res) (:defn exp-def)))))
+    ))
+
+(defn get-emo-props [{:keys [exp-def stim-infos num-res]
+                           :as exp-comp-props}]
+  (let [emo-id (:emo-id (nth (:defn exp-def) (:emo num-res)))]
+    {:emo-id emo-id
+     :vid-url (:url
+               (first (filter #(= emo-id (:id %))
+                              (:emo stim-infos))))
+     }))
+
+(defn get-some-mcg-props [{:keys [exp-def stim-infos num-res]
+                           :as exp-comp-props}]
+  (let [mcg-idx-in-block (get-mcg-idx-in-block exp-comp-props)
+        emo-idx (- (:emo num-res) 1) ;; from _zero_
+        mcg-id (-> (:defn exp-def)
+                   (nth emo-idx)
+                   (get :mcg-ids)
+                   (nth mcg-idx-in-block))
+        av-idxs (-> (:defn exp-def)
+                    (nth emo-idx)
+                    (get :av-idxs)
+                    (nth mcg-idx-in-block))]
+        {:mcg-id mcg-id :av-idxs av-idxs}))
+
 (defn exp-comp
-  [{:keys [exp-def stim-infos num-res]} owner]
+  [{:keys [exp-def stim-infos num-res] :as props} owner]
   (reify
       om/IRender
     (render [this]
@@ -95,51 +129,18 @@
         (dom/h3 nil "experiment component")
         (dom/span nil (str "exp id: " (:id exp-def)))
         )
-       (if (= (:mcg num-res)
-              (reduce
-               + (map (comp count :mcg-ids)
-                      (take (:emo num-res) (:defn exp-def)))))
-         (let [emo-id (:emo-id (nth (:defn exp-def) (:emo num-res)))]
-           (dom/div
-            nil
-            (om/build
-             emo-comp
-             {:emo-id emo-id
-              :vid-url (:url
-                        (first (filter #(= emo-id (:id %))
-                                       (:emo stim-infos))))
-              }
-             )
-            ))
-         (let [mcg-idx-in-block
-               (-
-                (:mcg num-res)
-                ;; num-mcg-res-prev-blocks
-                (reduce
-                 +
-                 (map
-                  count
-                  (map
-                   :mcg-ids
-                   (take (- (:emo num-res) 1) (:defn exp-def))))))]
-           (let [mcg-id (-> (:defn exp-def)
-                            (nth (:emo num-res))
-                            (get :mcg-ids)
-                            (nth mcg-idx-in-block))
-                 av-idxs (-> (:defn exp-def)
-                             (nth (:emo num-res))
-                             (get :av-idxs)
-                             (nth mcg-idx-in-block))]
+       (if (emo-stim? props)
+         (dom/div nil (om/build emo-comp (get-emo-props props)))
+         (let [{:keys [mcg-id av-idxs]} (get-some-mcg-props props)]
              (om/build
               mcg-comp
               {:mcg-id mcg-id
                :vid-url (-> (->> (:mcg stim-infos)
-                                 (filter #(= 5 (:id %)))
+                                 (filter #(= mcg-id (:id %)))
                                  (first))
                             (get :url))
                :av-idxs av-idxs
-               })
-             ))
+               }))
          )
        )
       )))

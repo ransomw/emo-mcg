@@ -6,6 +6,7 @@
    [cljs.build.api :as cljs]
    [ring.adapter.jetty :refer [run-jetty]]
    [ring.middleware.cors :refer [wrap-cors]]
+   [emcg.db.expone :refer [get-mcg-entry]]
    [emcg.db :as db]
    [emcg.server :refer [http-handler]]
    ))
@@ -34,12 +35,20 @@
     (f) ;; 2. run the test, i,e. end-to-end-suite
     (.stop server))) ;; 3. Stop the backend system
 
-(deftest end-to-end-suite
-  (let [compiler-opts {:main 'emcg.e2e-runner
+(defn run-doo-phantom [cljs-runner-main]
+  (let [compiler-opts {:main cljs-runner-main
                        :output-to "out/e2e_test.js"
                        :output-dir "out"
                        :asset-path "out"
-                       :optimizations :none}]
+                       :optimizations :none}
+        phantom-path (s/join " "
+                             [
+                              "phantomjs"
+                              ;; _supposedly_ enables CORS
+                              "--web-security=false"
+                              ;; "--debug=true"
+                              "--local-to-remote-url-access=true"
+                              ])]
     ;; Compile the ClojureScript tests
     (cljs/build (apply cljs/inputs ["src/cljs"
                                     "src/cljc"
@@ -48,22 +57,31 @@
                                     ])
                 compiler-opts)
     ;; Run the ClojureScript tests and check the result
-    (is
-     (zero?
-      (:exit
-       (doo/run-script
-        :phantom
-        compiler-opts
-        {:paths
-         {:phantom
-          (s/join " "
-                  [
-                   "phantomjs"
-                   ;; _supposedly_ enables CORS
-                   "--web-security=false"
-                   ;; "--debug=true"
-                   "--local-to-remote-url-access=true"
-                   ])
-          }
-         :debug true
-         }))))))
+    (->> (doo/run-script
+                     :phantom
+                     compiler-opts
+                     {:paths {:phantom phantom-path} :debug true})
+                    (:exit))
+    ))
+
+(deftest e2e-suite-no-db
+  (is (zero? (run-doo-phantom 'emcg.e2e-runner))))
+
+(deftest e2e-suite-add-mcg-res-no-db
+  (is (zero? (run-doo-phantom 'emcg.e2e-runner-add-mcg-res-no-db))))
+
+(deftest e2e-suite-create-exp
+  (is (zero? (run-doo-phantom 'emcg.e2e-runner-create-exp)))
+  (is (not (= 0 (count (db/get-exp 1)))))
+  (is (= 0 (count (db/get-exp 0))))
+  )
+
+(deftest e2e-suite-add-mcg-res
+  (is (zero? (run-doo-phantom 'emcg.e2e-runner-add-mcg-res)))
+
+  (let [mcg-entry (get-mcg-entry db/db-spec
+                                 ;; dupe cljs test value
+                                 1)]
+    (is (not (nil? (:idx-resp mcg-entry))))
+    )
+  )

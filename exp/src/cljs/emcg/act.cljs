@@ -4,7 +4,10 @@
   (:require
    [clojure.set :refer [rename-keys]]
    [cljs.core.async :refer [<! >! close!]]
-   [emcg.state :refer [update-chan count-stims]]
+   [emcg.util :refer [count-map-lists]]
+   [emcg.state :refer [app-state update-chan count-stims]]
+   [emcg.data-munge :refer [get-mcg-idx-in-block
+                            get-app-state-stim-id-head]]
    [emcg.comm :as comm]
    ))
 
@@ -53,8 +56,22 @@
     (go (>! update-chan {:emo-res {:id emo-id}}))
     nil))
 
-(defn add-mcg-res [mcg-id click-data]
-  (do
-    (go (>! update-chan {:mcg-res {:id mcg-id
-                                   :click-data click-data}}))
+(defn add-mcg-res [mcg-id-param {idx-resp :av-idx :as click-data}]
+  (let [
+        app-state-curr (deref app-state)
+        {{exp-id :id} :exp-def} app-state-curr
+        {:keys [emo-id mcg-id]
+         } (get-app-state-stim-id-head app-state-curr)
+        res-chan (comm/add-mcg-res exp-id emo-id mcg-id idx-resp)
+        ]
+    (go
+      (if (not (= mcg-id mcg-id-param))
+        nil) ;; todo: warn? error?
+      (>! update-chan {:mcg-res {:id mcg-id-param
+                                 :click-data click-data}})
+      (let [{res :res err :err} (<! res-chan)]
+        ;; todo: check errors.  in particular,
+        ;; handle momentary disconnects
+        nil)
+      (close! res-chan))
     nil))

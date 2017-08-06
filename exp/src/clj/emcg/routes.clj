@@ -74,7 +74,6 @@
         (if (= 1 (count mcg-datas))
           (first mcg-datas))))))
 
-
 (defn routes-expone []
   (routes
    ;; (GET "/exp/:id" [id] (db/get-exp id))
@@ -83,6 +82,7 @@
                      {:id exp-id
                       :defn (prune-private-expone-data
                              (db/get-exp exp-id))})))
+
    (GET "/exp/:exp-id/emo/:emo-id"
         [exp-id :<< as-int emo-id :<< as-int]
         (let [emo-data (get-emo-data exp-id emo-id)]
@@ -95,6 +95,7 @@
                         "entries for this exp/emo id pair")}
              400))
           ))
+
    (GET "/exp/:exp-id/emo/:emo-id/mcg/:mcg-id"
         [exp-id :<< as-int emo-id :<< as-int mcg-id :<< as-int]
         (let [mcg-data (get-mcg-data exp-id emo-id mcg-id)]
@@ -112,16 +113,13 @@
 
    (POST "/exp/:exp-id/emo/:emo-id/mcg/:mcg-id/resp"
          [exp-id :<< as-int emo-id :<< as-int
-          mcg-id :<< as-int idx-resp :<< as-int]
-
-        (route-print
-         "get for emo stim: exp-id, emo-id, mcg-id, idx-resp")
-        (route-print exp-id)
-        (route-print emo-id)
-        (route-print mcg-id)
-        (route-print idx-resp)
-
-        (make-edn-resp {:msg "unimpl"} 500))
+          mcg-id :<< as-int
+          ;; compojure coercions only apply to strings
+          idx-resp]
+         (if (not (nil? (db/set-mcg-res! mcg-id idx-resp)))
+           (make-edn-resp {})
+           (make-edn-resp {:msg "failed to store mcg resp"} 400))
+        )
    ))
 
 (defroutes routes-main

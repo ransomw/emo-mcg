@@ -4,7 +4,7 @@
    [ring.middleware.reload :refer [wrap-reload]]
    [figwheel-sidecar.repl-api :as figwheel]
    [figwheel-sidecar.config :as figwheel-config]
-   [clojure.test :refer [run-tests]]))
+   [clojure.test :refer [run-tests test-vars]]))
 
 ;; Let Clojure warn you when it needs to reflect on types, or when it does math
 ;; on unboxed numbers. In both cases you should add type annotations to prevent
@@ -73,6 +73,18 @@
   (run-tests 'emcg.routes-test)
   (run-tests 'emcg.e2e-test)
   )
+
+(defn run-passing-e2e-tests []
+  (test-vars [
+              #'emcg.e2e-test/e2e-suite-no-db
+              #'emcg.e2e-test/e2e-suite-create-exp
+              #'emcg.e2e-test/e2e-suite-add-mcg-res-no-db
+              #'emcg.e2e-test/e2e-suite-add-mcg-res
+              ]
+   ))
+
+(defn run-failing-e2e-tests []
+  (test-vars []))
 
 (def rreq reload-require)
 (def rdb db/reset-db!)

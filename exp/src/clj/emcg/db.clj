@@ -48,3 +48,6 @@
 
 (defn get-exp [exp-id]
   (exo/get-exp db-spec exp-id))
+
+(defn set-mcg-res! [mcg-id idx-resp]
+  (exo/set-mcg-res db-spec mcg-id idx-resp))

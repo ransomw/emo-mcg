@@ -1,4 +1,4 @@
-(ns emcg.comm-test
+(ns emcg.create-exp-test
   (:require-macros
    [cljs.test :refer [is deftest testing async]]
    [cljs.core.async.macros :refer [go]]

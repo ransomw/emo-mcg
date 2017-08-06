@@ -84,3 +84,11 @@ FROM (SELECT expone_emo.id as emo_id, idx_stim,
      WHERE expone.id = :exp-id) as emo
      JOIN expone_mcg
      ON emo_id = expone_emo_id;
+
+-- :name get-mcg-hug :? :*
+SELECT * FROM expone_mcg WHERE id = :mcg-id;
+
+-- :name set-mcg-resp-hug :! :n
+UPDATE expone_mcg
+SET idx_resp = :idx-resp
+WHERE id = :mcg-id;

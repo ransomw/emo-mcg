@@ -33,6 +33,7 @@
                  ;; duplicates plugin version
                  [lein-doo "0.1.6"]
                  [devcards "0.2.3"]
+                 [reagent "0.7.0"]
                  ]
 
   :plugins [[lein-cljsbuild "1.1.3"]

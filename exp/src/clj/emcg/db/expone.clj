@@ -165,3 +165,35 @@
               }))
          (h-rows-to-tree rows-res :emo_id))
   ))
+
+
+(defn get-mcg-entry [db-spec mcg-id]
+  (let [rows-res (get-mcg-hug
+                  db-spec
+                  {:mcg-id mcg-id})
+        ]
+    (if (= 1 (count rows-res))
+      (let [row-res (first rows-res)]
+        (if (= (-> row-res (get :id)) mcg-id)
+          (->
+           row-res
+           (set/rename-keys {:idx_a_stim :idx-a-stim
+                             :idx_v_stim :idx-v-stim
+                             :idx_resp :idx-resp})
+           (dissoc :expone_emo_id :seq_num :id)
+           )
+      )))))
+
+
+(defn set-mcg-res [db-spec mcg-id idx-resp]
+  (let [mcg-entry (get-mcg-entry db-spec mcg-id)]
+    (if (not (nil? mcg-entry))
+      (let [{:keys [idx-a-stim idx-v-stim]
+             idx-resp-curr :idx-resp} mcg-entry]
+
+        (if (and (nil? idx-resp-curr)
+                 (or (= idx-a-stim idx-resp) (= idx-v-stim idx-resp)))
+          (set-mcg-resp-hug
+           db-spec
+           {:mcg-id mcg-id :idx-resp idx-resp})
+          )))))

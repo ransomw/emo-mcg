@@ -90,3 +90,16 @@
                (close! res-stim-chan)))))
       ))
     res-chan))
+
+(defn add-mcg-res [exp-id emo-id mcg-id idx-resp]
+  (let [res-chan (chan)]
+    (go (let [response (<! (http/post
+                            (s/join [base-url
+                                     "/exp/" exp-id "/emo/" emo-id
+                                     "/mcg/" mcg-id "/resp"])
+                            {:edn-params {:idx-resp idx-resp}}))]
+          (if (:success response)
+            (>! res-chan {:res (:body response)})
+            (>! res-chan {:err (:body response)}))
+        ))
+    res-chan))
