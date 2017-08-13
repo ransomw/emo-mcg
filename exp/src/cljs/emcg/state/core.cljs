@@ -1,4 +1,4 @@
-(ns emcg.state
+(ns emcg.state.core
   (:require-macros [cljs.core.async.macros :refer [go]])
 
   (:require
@@ -20,14 +20,6 @@
     }))
 
 (defonce update-chan (chan))
-
-(defn count-stims
-  "total number of stimuli, both emo and mcg, for a given experiment"
-  [exp-def]
-  (let [mcg-blocks (or (:defn exp-def) exp-def)]
-    (+ (count mcg-blocks)
-       (reduce + (map (comp count :mcg-ids) mcg-blocks)))))
-
 
 (defn ^{private true}
   make-id-list-updater [id-list-lookup]

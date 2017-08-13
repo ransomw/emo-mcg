@@ -4,7 +4,9 @@
    [ring.middleware.reload :refer [wrap-reload]]
    [figwheel-sidecar.repl-api :as figwheel]
    [figwheel-sidecar.config :as figwheel-config]
-   [clojure.test :refer [run-tests test-vars]]))
+   [clojure.test :refer [run-tests test-vars]]
+   [clojure.java.io :as io]
+   ))
 
 ;; Let Clojure warn you when it needs to reflect on types, or when it does math
 ;; on unboxed numbers. In both cases you should add type annotations to prevent
@@ -33,6 +35,9 @@
     :builds-to-start ["devcards"]}
    ))
 
+(defn build-cljs []
+  (figwheel/clean-builds :app :devcards))
+
 (defn stop []
   (figwheel/stop-figwheel!))
 
@@ -43,13 +48,9 @@
   )
 
 (defn init-require []
-  (require '(emcg [rand :as mr]) :reload)
+  (require '(emcg [util :as util]) :reload)
   (require '(emcg.db [expone :as eo]) :reload)
-  (require '(emcg [db :as db]) :reload)
-  (require '(emcg [routes :as r]) :reload)
-
-  (require '(clojure.java [io :as io]))
-
+  (require '(emcg.db [core :as db]) :reload)
   (require '(emcg [expone :refer [emo-stim-filenames mcg-stim-filenames]
                    :rename {emo-stim-filenames esf
                             mcg-stim-filenames msf}]))
@@ -60,11 +61,11 @@
 
 (defn reload-require []
   (require 'user :reload)
-  (require 'emcg.rand :reload)
+  (require 'emcg.util :reload)
   (require 'emcg.db.expone :reload)
-  (require 'emcg.db :reload)
+  (require 'emcg.db.core :reload)
   (require 'emcg.hroutes :reload)
-  (require 'emcg.routes :reload)
+  (require 'emcg.routes.core :reload)
   (require-test)
   )
 

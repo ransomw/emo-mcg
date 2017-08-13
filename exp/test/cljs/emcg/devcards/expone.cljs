@@ -13,9 +13,9 @@
    [om.dom :as dom :include-macros true]
    [om.core :as om :include-macros true]
    [emcg.util :refer [count-map-lists]]
-   [emcg.state :refer [count-stims]]
-   [emcg.data-munge :refer [get-mcg-idx-in-block]]
-   [emcg.comp.root :as root]
+   [emcg.state.data-munge :refer [count-stims
+                                  get-mcg-idx-in-block]]
+   [emcg.comp.props :as props]
    [emcg.comp.expone :as eone]
    [emcg.devcards.dat :as dat]
    ))
@@ -54,20 +54,20 @@
 (let [app-state dat/app-state-init]
   (deftest init-exp-comp-tests
     (testing "checks on setup data + root component logic"
-      (is (= 0 (get-in (root/app-to-exp-comp-props app-state)
+      (is (= 0 (get-in (props/make-exp-comp-props app-state)
                        [:num-res :emo])))
-      (is (= 0 (get-in (root/app-to-exp-comp-props app-state)
+      (is (= 0 (get-in (props/make-exp-comp-props app-state)
                        [:num-res :mcg])))
       ))
 
   (defcard
     "*** exp-comp ( no clicks ) ***"
     (dc/om-root eone/exp-comp)
-    (root/app-to-exp-comp-props app-state)
+    (props/make-exp-comp-props app-state)
     {:inspect-data true}))
 
 (let [app-state dat/app-state-one-emo
-      exp-comp-props (root/app-to-exp-comp-props app-state)]
+      exp-comp-props (props/make-exp-comp-props app-state)]
   (deftest one-emo-exp-comp-tests
 
     (testing "checks on setup data + root component logic"
@@ -78,12 +78,12 @@
       )
 
     (testing "the mcg comp will be rendered"
-      (is (not (eone/emo-stim? exp-comp-props)))
+      (is (not (props/emo-stim? exp-comp-props)))
       )
 
     (testing "check data munge functions for errors"
       (is (not (nil? (get-mcg-idx-in-block exp-comp-props))))
-      (is (not (nil? (eone/get-some-mcg-props exp-comp-props))))
+      (is (not (nil? (props/get-some-mcg-props exp-comp-props))))
       )
 
 
@@ -97,7 +97,7 @@
     ;;       )
     ;;     ;; todo: dedupe here
     ;;     (is (= {:mcg-id 7 :av-idxs '(2 0)}
-    ;;            (eone/get-some-mcg-props exp-comp-props)))
+    ;;            (props/get-some-mcg-props exp-comp-props)))
     ;; )
 
     )
@@ -109,7 +109,7 @@
     {:inspect-data true}))
 
 (let [app-state dat/app-state-one-mcg
-      exp-comp-props (root/app-to-exp-comp-props app-state)
+      exp-comp-props (props/make-exp-comp-props app-state)
       ]
   (deftest one-mcg-exp-comp-tests
     (testing "misc. checks on test data setup"
@@ -122,10 +122,10 @@
                        [:num-res :mcg])))
       )
     (testing "checks that the mcg comp will be rendered"
-      (is (not (eone/emo-stim? exp-comp-props)))
+      (is (not (props/emo-stim? exp-comp-props)))
       )
     (testing "check data munge functions for errors"
-      (is (not (nil? (eone/get-some-mcg-props exp-comp-props))))
+      (is (not (nil? (props/get-some-mcg-props exp-comp-props))))
       )
     )
 
@@ -136,18 +136,18 @@
     {:inspect-data true}))
 
 (let [app-state dat/app-state-one-block
-      exp-comp-props (root/app-to-exp-comp-props app-state)]
+      exp-comp-props (props/make-exp-comp-props app-state)]
   (deftest one-block-exp-comp-tests
     (testing "checks on setup data + root component logic"
-      (is (= 1 (get-in (root/app-to-exp-comp-props
+      (is (= 1 (get-in (props/make-exp-comp-props
                         app-state) [:num-res :emo])))
-      (is (not (= 0 (get-in (root/app-to-exp-comp-props
+      (is (not (= 0 (get-in (props/make-exp-comp-props
                              app-state) [:num-res :mcg]))))
       )
     (testing "checks that the emo comp will be rendered"
       (let [{:keys [exp-def stim-infos num-res] :as props-exp-comp}
             exp-comp-props]
-        (is (eone/emo-stim? props-exp-comp))
+        (is (props/emo-stim? props-exp-comp))
         )
       ))
 
@@ -158,7 +158,7 @@
     {:inspect-data true}))
 
 (let [app-state dat/app-state-one-block-one-emo
-      exp-comp-props (root/app-to-exp-comp-props app-state)]
+      exp-comp-props (props/make-exp-comp-props app-state)]
 
   (defcard
     "*** exp-comp ( one block, one emo responses ) ***"
@@ -167,7 +167,7 @@
     {:inspect-data true}))
 
 (let [app-state dat/app-state-one-block-one-mcg
-      exp-comp-props (root/app-to-exp-comp-props app-state)]
+      exp-comp-props (props/make-exp-comp-props app-state)]
   (deftest one-block-one-mcg-exp-comp-tests
 
     (testing "misc. checks on test data setup"
@@ -175,11 +175,11 @@
       )
 
     (testing "the mcg comp will be rendered"
-      (is (not (eone/emo-stim? exp-comp-props)))
+      (is (not (props/emo-stim? exp-comp-props)))
       )
     (testing "check data munge functions for errors"
       (is (not (nil? (get-mcg-idx-in-block exp-comp-props))))
-      (is (not (nil? (eone/get-some-mcg-props exp-comp-props))))
+      (is (not (nil? (props/get-some-mcg-props exp-comp-props))))
       )
     )
 
@@ -191,7 +191,7 @@
 
 
 (let [app-state dat/app-state-one-block-two-mcg
-      exp-comp-props (root/app-to-exp-comp-props app-state)]
+      exp-comp-props (props/make-exp-comp-props app-state)]
 
   (defcard
     "*** exp-comp ( one block, one emo, two mcg responses ) ***"

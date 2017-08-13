@@ -12,8 +12,8 @@
    [devcards.core]
    [om.dom :as dom :include-macros true]
    [om.core :as om :include-macros true]
-   [emcg.state :refer [count-stims]]
-   [emcg.comp.root :as root]
+   [emcg.state.data-munge :as m]
+   [emcg.comp.root :refer [root-component]]
    [emcg.devcards.dat :as dat]
    ))
 
@@ -24,19 +24,19 @@
   (let [app dat/app-state-init]
     (testing "duplicate init logic -- todo: extract/dedupe"
       (is (integer?
-           (count-stims (:exp-def app))
+           (m/count-stims (:exp-def app))
            ))
       (is (integer?
            (count (apply concat (vals (:stim-infos app))))
            ))
-      (is (not (root/fetching-stims? app)))
+      (is (not (m/fetching-stims? app)))
       (is
        (=
         :build-comp
         (cond
           (:init-err app) :init-err
           (not (:exp-def app)) :initing-defn
-          (root/fetching-stims? app) :fetching-stims
+          (m/fetching-stims? app) :fetching-stims
           :else :build-comp
           ))
        ))
@@ -44,5 +44,5 @@
 
 (defcard
   "*** root-component ***"
-  (dc/om-root root/root-component)
+  (dc/om-root root-component)
   dat/app-state-init)

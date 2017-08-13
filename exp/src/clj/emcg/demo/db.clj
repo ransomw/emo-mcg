@@ -1,8 +1,7 @@
 (ns emcg.demo.db
   (:require
    [clojure.java.jdbc :as jdbc]
-
-   [emcg.db :refer [db-spec]]
+   [emcg.config :refer [db-spec]]
    [emcg.demo.db.thingone :as thingone]
    ))
 

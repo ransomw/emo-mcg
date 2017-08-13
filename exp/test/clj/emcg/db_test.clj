@@ -1,7 +1,8 @@
 (ns emcg.db-test
   (:require
    [clojure.test :refer :all]
-   [emcg.db :as db]
+   [emcg.config :refer [db-spec]]
+   [emcg.db.core :as db]
    [emcg.db.expone :as eone]
    [emcg.expone :refer [exp-stim-config]]
    ))
@@ -14,9 +15,13 @@
 
 (use-fixtures :each db-fixture)
 
+(def num-emo-stim 2)
+
+(defn get-mcg-entry [mcg-id]
+  (eone/get-mcg-entry db-spec mcg-id))
+
 (deftest init-exp-test
-  (let [num-emo-stim 2
-        exp-id (db/init-exp! num-emo-stim)]
+  (let [exp-id (db/init-exp! num-emo-stim)]
     (is (integer? exp-id))
     (let [exp-defn (db/get-exp exp-id)]
       (is (seq? exp-defn))
@@ -60,20 +65,32 @@
     )))
 
 (deftest mcg-res-test
-  (let [num-emo-stim 2
-        exp-id (db/init-exp! num-emo-stim)]
+  (let [exp-id (db/init-exp! num-emo-stim)]
     (let [{:keys [mcg-id idx-v]} (-> (db/get-exp 1)
                                      (first)
                                      (get :mcg-trials)
                                      (first))]
-      (let [mcg-entry (eone/get-mcg-entry db/db-spec mcg-id)]
+      (let [mcg-entry (get-mcg-entry mcg-id)]
         (is (map? mcg-entry))
         (is (= (set (keys mcg-entry))
                (set [:idx-a-stim :idx-v-stim :idx-resp])))
         (is (nil? (:idx-resp mcg-entry)))
         )
       (is (integer? (db/set-mcg-res! mcg-id idx-v)))
-      (let [mcg-entry (eone/get-mcg-entry db/db-spec mcg-id)]
+      (let [mcg-entry (get-mcg-entry mcg-id)]
         (is (= idx-v (:idx-resp mcg-entry)))
         )
       )))
+
+(deftest reset-db!-test
+  (let [exp-id (db/init-exp! num-emo-stim)
+        {:keys [mcg-id idx-v]} (-> (db/get-exp 1)
+                                   (first)
+                                   (get :mcg-trials)
+                                   (first))]
+    (is (not (= 0 (count (db/get-exp exp-id)))))
+    (is (not (nil? (get-mcg-entry mcg-id))))
+    (db/reset-db!)
+    (is (= 0 (count (db/get-exp exp-id))))
+    (is (nil? (get-mcg-entry mcg-id)))
+    ))

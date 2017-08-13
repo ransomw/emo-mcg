@@ -1,12 +1,9 @@
 (ns emcg.core
   (:require
    [om.core :as om :include-macros true]
-
-
-   [emcg.state :as st]
+   [emcg.state.core :as st]
    [emcg.act :as act]
    [emcg.comp.root :as comp-root]
-
    [emcg.demo.core :refer [run-demo]]
    ))
 

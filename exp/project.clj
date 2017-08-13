@@ -65,7 +65,10 @@
 
   :cljsbuild {:builds
               [{:id "app"
-                :source-paths ["src/cljs" "src/cljc" "env/prod/cljs"]
+                ;; clj test env keeps local db
+                ;; cljs production env connects to full backend
+                :source-paths ["src/cljs" "src/cljc"
+                               "env/prod/cljs" "env/test/clj"]
                 :figwheel true
                 ;; Alternatively,
                 ;; :figwheel {:on-jsload "emcg.core/on-figwheel-reload"}
@@ -80,7 +83,7 @@
 
                {:id "devcards"
                 :source-paths ["src/cljs" "src/cljc"
-                               "env/test/cljs"
+                               "env/test/cljs" "env/test/clj"
                                "test/cljs" "test/cljc"]
                 :figwheel {:devcards true}
                 :compiler
@@ -160,7 +163,7 @@
               :plugins [[lein-figwheel "0.5.11"]
                         [lein-doo "0.1.6"]]
 
-              :source-paths ["dev"]
+              :source-paths ["dev" "env/test/clj"]
               :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
 
              :uberjar

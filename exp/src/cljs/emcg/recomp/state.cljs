@@ -1,7 +1,7 @@
 (ns emcg.recomp.state
   (:require
    [reagent.core :as r]
-   [emcg.state :as st]
+   [emcg.state.core :as st]
    ))
 
 (defonce app-state (r/atom @st/app-state))

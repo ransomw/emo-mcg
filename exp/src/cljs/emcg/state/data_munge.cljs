@@ -1,7 +1,14 @@
-(ns emcg.data-munge
+(ns emcg.state.data-munge
   (:require
    [emcg.util :refer [count-map-lists]]
   ))
+
+(defn count-stims
+  "total number of stimuli, both emo and mcg, for a given experiment"
+  [exp-def]
+  (let [mcg-blocks (or (:defn exp-def) exp-def)]
+    (+ (count mcg-blocks)
+       (reduce + (map (comp count :mcg-ids) mcg-blocks)))))
 
 (defn get-mcg-idx-in-block
   [{{exp-defn :defn} :exp-def
@@ -12,6 +19,13 @@
                    (map :mcg-ids)
                    (map count)
                    ))
+     ))
+
+;;;; functions on _dereferenced_ app-state
+
+(defn fetching-stims? [app-state]
+  (< (count-stims (:exp-def app-state))
+     (count (apply concat (vals (:stim-infos app-state))))
      ))
 
 (defn get-app-state-stim-id-head [app-state]

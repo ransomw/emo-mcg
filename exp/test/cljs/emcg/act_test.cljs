@@ -9,7 +9,7 @@
    [cljs-http.client :as http]
    [emcg.type-checks-testing :refer [check-exp-defn]]
    [emcg.act :as act]
-   [emcg.state :as st]
+   [emcg.state.core :as st]
    ))
 
 (def create-exp-timeout-ms 2500)

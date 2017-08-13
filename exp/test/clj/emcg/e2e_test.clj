@@ -6,8 +6,8 @@
    [cljs.build.api :as cljs]
    [ring.adapter.jetty :refer [run-jetty]]
    [ring.middleware.cors :refer [wrap-cors]]
-   [emcg.db.expone :refer [get-mcg-entry]]
-   [emcg.db :as db]
+   [emcg.db-test :refer [get-mcg-entry]]
+   [emcg.db.core :as db]
    [emcg.server :refer [http-handler]]
    ))
 
@@ -79,9 +79,9 @@
 (deftest e2e-suite-add-mcg-res
   (is (zero? (run-doo-phantom 'emcg.e2e-runner-add-mcg-res)))
 
-  (let [mcg-entry (get-mcg-entry db/db-spec
-                                 ;; dupe cljs test value
-                                 1)]
+  (let [mcg-entry (get-mcg-entry
+                   ;; dupe cljs test value
+                   1)]
     (is (not (nil? (:idx-resp mcg-entry))))
     )
   )

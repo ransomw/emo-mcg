@@ -9,9 +9,8 @@
    [cljs-http.client :as http]
    [emcg.type-checks-testing :refer [check-exp-defn]]
    [emcg.act :as act]
-   [emcg.state :as st]
-   [emcg.comp.root :as root]
-   [emcg.comp.expone :as eone]
+   [emcg.state.core :as st]
+   [emcg.comp.props :as props]
    ))
 
 (def create-exp-timeout-ms 2500)
@@ -26,17 +25,17 @@
    (go
      (act/create-exp)
      (<! (timeout create-exp-timeout-ms))
-     (let [exp-comp-props (root/app-to-exp-comp-props @st/app-state)]
-       (is (eone/emo-stim? exp-comp-props))
-       (let [{:keys [emo-id]} (eone/get-emo-props exp-comp-props)]
+     (let [exp-comp-props (props/make-exp-comp-props @st/app-state)]
+       (is (props/emo-stim? exp-comp-props))
+       (let [{:keys [emo-id]} (props/get-emo-props exp-comp-props)]
          (is (integer? emo-id))
          (act/add-emo-res emo-id)))
      (<! (timeout add-emo-res-timeout-ms))
 
-     (let [exp-comp-props (root/app-to-exp-comp-props @st/app-state)]
-       (is (not (eone/emo-stim? exp-comp-props)))
+     (let [exp-comp-props (props/make-exp-comp-props @st/app-state)]
+       (is (not (props/emo-stim? exp-comp-props)))
        (let [{mcg-id :mcg-id [av-idx1 av-idx2] :av-idxs}
-             (eone/get-some-mcg-props exp-comp-props)]
+             (props/get-some-mcg-props exp-comp-props)]
          (is (integer? mcg-id))
          (is (integer? av-idx1))
          (is (integer? av-idx2))

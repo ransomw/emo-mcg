@@ -12,7 +12,8 @@
    [devcards.core]
    [om.dom :as dom :include-macros true]
    [om.core :as om :include-macros true]
-   [emcg.comp.expone :as eone]
+   [emcg.comp.expone-mcg :refer [mcg-comp]]
+   [emcg.comp.expone-emo :refer [emo-comp]]
    [emcg.devcards.dat :as dat]
    ))
 
@@ -21,7 +22,7 @@
 
 (defcard
   "*** mcg-comp ***"
-  (dc/om-root eone/mcg-comp)
+  (dc/om-root mcg-comp)
   {:mcg-id 7
    :vid-url "vid/placeholder_V1A1.mp4"
    :av-idxs '(2 0)}
@@ -29,7 +30,7 @@
 
 (defcard
   "*** emo-comp ***"
-  (dc/om-root eone/emo-comp)
+  (dc/om-root emo-comp)
   {:emo-id 3
    :vid-url "vid/placeholder_E1.mp4"}
   {:inspect-data true})

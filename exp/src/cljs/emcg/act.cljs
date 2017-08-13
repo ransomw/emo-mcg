@@ -5,9 +5,10 @@
    [clojure.set :refer [rename-keys]]
    [cljs.core.async :refer [<! >! close!]]
    [emcg.util :refer [count-map-lists]]
-   [emcg.state :refer [app-state update-chan count-stims]]
-   [emcg.data-munge :refer [get-mcg-idx-in-block
-                            get-app-state-stim-id-head]]
+   [emcg.state.core :refer [app-state update-chan]]
+   [emcg.state.data-munge :refer [get-mcg-idx-in-block
+                                  get-app-state-stim-id-head
+                                  count-stims]]
    [emcg.comm :as comm]
    ))
 
