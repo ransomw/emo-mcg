@@ -8,22 +8,20 @@
                  ;;;;;;;; from chestnut
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.89" :scope "provided"]
-                 [com.cognitect/transit-clj "0.8.285"]
-                 [ring "1.4.0"]
-                 [ring/ring-defaults "0.2.0"]
+                 [ring "1.6.2"]
+                 [ring/ring-defaults "0.3.1"]
                  [ring/ring-mock "0.3.1"]
-                 [bk/ring-gzip "0.1.1"]
+                 [bk/ring-gzip "0.2.1"]
                  [ring.middleware.logger "0.5.0"]
-                 [compojure "1.5.0"]
-                 [environ "1.0.3"]
-                 [org.omcljs/om "1.0.0-alpha36"]
+                 [compojure "1.6.0"]
+                 [environ "1.1.0"]
+                 [org.omcljs/om "1.0.0-beta1"]
                  ;;;;;;;; added to chestnut
                  ;;;; client
-                 [cljs-http "0.1.42"]
+                 [cljs-http "0.1.43"]
                  ;;;; server
                  [postgresql "9.3-1102.jdbc41"]
                  [com.layerware/hugsql "0.4.7"]
-                 [honeysql "0.8.1"]
                  ;; explicitly specify to avoid
                  ;;  namespace 'cheshire.factory' not found
                  ;; error with ring-middleware-format add
@@ -31,15 +29,15 @@
                  [ring-middleware-format "0.7.2"]
                  ;; todo: dedupe plugin?
                  ;; duplicates plugin version
-                 [lein-doo "0.1.6"]
+                 [lein-doo "0.1.7"]
                  [devcards "0.2.3"]
                  [reagent "0.7.0"]
                  ]
 
-  :plugins [[lein-cljsbuild "1.1.3"]
-            [lein-environ "1.0.3"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-environ "1.1.0"]]
 
-  :min-lein-version "2.6.1"
+  :min-lein-version "2.7.1"
 
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
 
@@ -155,13 +153,17 @@
   :doo {:build "test"}
 
   :profiles {:dev
-             {:dependencies [[figwheel "0.5.11"]
-                             [figwheel-sidecar "0.5.11"]
+             {:dependencies [
+                             [figwheel "0.5.12"]
+                             [figwheel-sidecar "0.5.12"]
                              [com.cemerick/piggieback "0.2.1"]
-                             [org.clojure/tools.nrepl "0.2.12"]]
+                             [org.clojure/tools.nrepl "0.2.12"]
+                             ]
 
-              :plugins [[lein-figwheel "0.5.11"]
-                        [lein-doo "0.1.6"]]
+              :plugins [
+                        [lein-figwheel "0.5.12"]
+                        [lein-doo "0.1.7"]
+                        ]
 
               :source-paths ["dev" "env/test/clj"]
               :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}

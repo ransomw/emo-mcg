@@ -27,7 +27,7 @@
        (dom/video
         #js {:src vid-url
              :controls false
-             :crossorigin "anonymous"
+             :crossOrigin "anonymous"
              ;; :ref "video"
              :ref (fn [el] (set! (.-video owner) el))
              })
