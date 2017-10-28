@@ -1,24 +1,29 @@
 (ns emcg.db.core
   (:require
+   [hugsql.core :as hugsql]
+   [hugsql.adapter.clojure-jdbc :as cj-adapter]
+
    [emcg.db.core-helpers :as h]
    [emcg.db.expone :as exo]
-   [emcg.config :refer [db-spec]]
    ))
 
-(defn reset-db! []
-  (h/drop-all-tables!)
-  (h/create-all-tables!)
+(defn app-init []
+  (hugsql/set-adapter! (cj-adapter/hugsql-adapter-clojure-jdbc)))
+
+(defn reset-db! [db]
+  (h/drop-all-tables! (:connection db))
+  (h/create-all-tables! (:connection db))
   )
 
-(defn init-exp! [num-emo-stim]
-  (let [exp-id (h/add-exp!)]
+(defn init-exp! [db num-emo-stim]
+  (let [exp-id (h/add-exp! (:connection db))]
     (doall ;; force evaluation of lazy seq
-     (map h/add-mcg-block!
-          (h/add-emo-stims! exp-id num-emo-stim)))
+     (map (partial h/add-mcg-block! (:connection db))
+          (h/add-emo-stims! (:connection db) exp-id num-emo-stim)))
     exp-id))
 
-(defn get-exp [exp-id]
-  (exo/get-exp db-spec exp-id))
+(defn get-exp [db exp-id]
+  (exo/get-exp (:connection db) exp-id))
 
-(defn set-mcg-res! [mcg-id idx-resp]
-  (exo/set-mcg-res db-spec mcg-id idx-resp))
+(defn set-mcg-res! [db mcg-id idx-resp]
+  (exo/set-mcg-res (:connection db) mcg-id idx-resp))

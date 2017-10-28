@@ -1,24 +1,34 @@
 (ns user
   (:require
-   [emcg.server]
-   [ring.middleware.reload :refer [wrap-reload]]
-   [figwheel-sidecar.repl-api :as figwheel]
-   [figwheel-sidecar.config :as figwheel-config]
+   [clojure.repl :refer [doc]]
    [clojure.test :refer [run-tests test-vars]]
    [clojure.java.io :as io]
+   [clojure.tools.namespace.repl
+    :refer [set-refresh-dirs refresh refresh-all]]
+   [reloaded.repl :refer [system init]]
+   [com.stuartsierra.component :as component]
+   [figwheel-sidecar.repl-api :as figwheel]
+   [figwheel-sidecar.config :as fw-config]
+   [figwheel-sidecar.system :as fw-sys]
+
+   [emcg.application]
+   [emcg.config :refer [config]]
+
+   [emcg.db-test]
+   [emcg.routes-test]
+   [emcg.e2e-test]
    ))
 
-;; Let Clojure warn you when it needs to reflect on types, or when it does math
-;; on unboxed numbers. In both cases you should add type annotations to prevent
+;; Let Clojure warn you when it needs to reflect on types,
+;; or when it does math on unboxed numbers.
+;; In both cases you should add type annotations to prevent
 ;; degraded performance.
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
-(def http-handler
-  (wrap-reload #'emcg.server/http-handler))
 
 (defn run []
   (figwheel/start-figwheel!
-   {:builds (figwheel-config/get-project-builds)
+   {:builds (fw-config/get-project-builds)
     :ring-handler 'user/http-handler
     :builds-to-start ["app"]}
    ))
@@ -27,73 +37,53 @@
 
 ;;;;;;; added to chestnut
 
-(defn run-devcards []
-  (figwheel/start-figwheel!
-   {:builds (figwheel-config/get-project-builds)
-    :http-server-root "devcards"
-    :css-dirs ["resources/public/css"]
-    :builds-to-start ["devcards"]}
-   ))
+(defn dev-system []
+  (assoc (emcg.application/app-system (config))
+    :figwheel-system (fw-sys/figwheel-system (fw-config/fetch-config))
+    :css-watcher (fw-sys/css-watcher
+                  {:watch-paths ["resources/public/css"]})
+    ))
 
-(defn build-cljs []
-  (figwheel/clean-builds :app :devcards))
+(defn devcards-system []
+  (assoc
+   (emcg.application/app-system (config))
+   :figwheel-system
+   (fw-sys/figwheel-system
+    (-> (fw-config/fetch-config)
+        (update-in
+         [:data :figwheel-options]
+         #(merge % {:http-server-root "devcards"}))
+        (update-in
+         [:data]
+         #(merge % {:build-ids ["devcards"]}))
+        )
+    )))
 
-(defn stop []
-  (figwheel/stop-figwheel!))
+(set-refresh-dirs "src" "dev" "test")
 
-(defn require-test []
-  (require 'emcg.db-test :reload)
-  (require 'emcg.routes-test :reload)
-  (require 'emcg.e2e-test :reload)
-  )
-
-(defn init-require []
-  (require '(emcg [util :as util]) :reload)
-  (require '(emcg.db [expone :as eo]) :reload)
-  (require '(emcg.db [core :as db]) :reload)
-  (require '(emcg [expone :refer [emo-stim-filenames mcg-stim-filenames]
-                   :rename {emo-stim-filenames esf
-                            mcg-stim-filenames msf}]))
-  (require-test)
-  )
-
-(init-require)
-
-(defn reload-require []
-  (require 'user :reload)
-  (require 'emcg.util :reload)
-  (require 'emcg.db.expone :reload)
-  (require 'emcg.db.core :reload)
-  (require 'emcg.hroutes :reload)
-  (require 'emcg.routes.core :reload)
-  (require-test)
-  )
+(defn go []
+  (reloaded.repl/set-init! #(dev-system))
+  (reloaded.repl/go))
+(defn go-devcards []
+  (reloaded.repl/set-init! #(devcards-system))
+  (reloaded.repl/go))
+(def stop reloaded.repl/stop)
 
 (defn run-all-tests []
-  (run-tests 'emcg.db-test)
-  (run-tests 'emcg.routes-test)
-  (run-tests 'emcg.e2e-test)
+  (do
+    (stop)
+    ;; refresh-all in case of sql changes
+    (refresh-all)
+    (map run-tests
+         [
+          'emcg.db-test
+          'emcg.routes-test
+          'emcg.e2e-test
+          ])
+    ))
+
+(defn cljs-clean []
+  (figwheel/start-figwheel!)
+  (figwheel/clean-builds :app :devcards)
+  (figwheel/stop-figwheel!)
   )
-
-(defn run-passing-e2e-tests []
-  (test-vars [
-              #'emcg.e2e-test/e2e-suite-no-db
-              #'emcg.e2e-test/e2e-suite-create-exp
-              #'emcg.e2e-test/e2e-suite-add-mcg-res-no-db
-              #'emcg.e2e-test/e2e-suite-add-mcg-res
-              ]
-   ))
-
-(defn run-failing-e2e-tests []
-  (test-vars []))
-
-(def rreq reload-require)
-(def rdb db/reset-db!)
-(def brep browser-repl)
-(defn rtest [] (do (reload-require) (run-all-tests)))
-
-;;;;;;
-
-(defn enter-ns [namespace]
-  (require namespace :reload)
-  (in-ns namespace))

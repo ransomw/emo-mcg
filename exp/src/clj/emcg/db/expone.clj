@@ -3,10 +3,10 @@
    [clojure.string :as s]
    [clojure.set :as set]
    [hugsql.core :as hugsql]
-   [emcg.util :as util]
-   [emcg.db.expone-hug :as hug]
+   [emcg.db.util :as util]
+   [emcg.db.expone_hug :as hug]
    [emcg.db.expone-logic :refer [gen-mcg-stim-block]]
-   [emcg.expone :refer [exp-stim-config]]
+   [emcg.db.expone-defs :refer [exp-stim-config]]
    ))
 
 (hugsql/def-db-fns "emcg/db/expone_schema.sql")
@@ -19,15 +19,15 @@
 
 ;; init exp ;
 
-(defn add-exp [db-spec]
+(defn add-exp [db]
   (:id (first ;; exactly one row is inserted
-        (hug/add-exp db-spec))))
+        (hug/add-exp db))))
 
-(defn add-emo-stims [db-spec exp-id num-emo-stim]
+(defn add-emo-stims [db exp-id num-emo-stim]
   (map
    (fn [[idx-stim seq-num]]
      (:id (first
-           (hug/add-emo-stim db-spec {:exp-id exp-id
+           (hug/add-emo-stim db {:exp-id exp-id
                                       :idx-stim idx-stim
                                       :seq-num seq-num
                                       }))))
@@ -38,13 +38,13 @@
      (map list idx-stim-list (range (count idx-stim-list))))
    ))
 
-(defn add-mcg-stim-block [db-spec emo-stim-id]
+(defn add-mcg-stim-block [db emo-stim-id]
   (doall
    (map
     (fn [mcg-trial-def-map]
       (:id (first ;; exactly one row is inserted
             (hug/add-mcg-stim
-             db-spec
+             db
              (merge {:emo-stim-id emo-stim-id}
                     mcg-trial-def-map)))))
     (gen-mcg-stim-block)
@@ -57,9 +57,9 @@
 ;; stimulus&response trials, each of which contains multiple
 ;; McGuirk-effect A-V pairings
 
-(defn get-exp [db-spec exp-id]
+(defn get-exp [db exp-id]
   (let [rows-res (hug/get-exp
-                  db-spec
+                  db
                   {:exp-id exp-id})
         ]
     (map (fn [{emo-id :emo_id
@@ -82,9 +82,9 @@
     ))
 
 
-(defn get-mcg-entry [db-spec mcg-id]
+(defn get-mcg-entry [db mcg-id]
   (let [rows-res (hug/get-mcg
-                  db-spec
+                  db
                   {:mcg-id mcg-id})
         ]
     (if (= 1 (count rows-res))
@@ -100,14 +100,14 @@
       )))))
 
 
-(defn set-mcg-res [db-spec mcg-id idx-resp]
-  (let [mcg-entry (get-mcg-entry db-spec mcg-id)]
+(defn set-mcg-res [db mcg-id idx-resp]
+  (let [mcg-entry (get-mcg-entry db mcg-id)]
     (if (not (nil? mcg-entry))
       (let [{:keys [idx-a-stim idx-v-stim]
              idx-resp-curr :idx-resp} mcg-entry]
         (if (and (nil? idx-resp-curr)
                  (or (= idx-a-stim idx-resp) (= idx-v-stim idx-resp)))
           (hug/set-mcg-resp
-           db-spec
+           db
            {:mcg-id mcg-id :idx-resp idx-resp})
           )))))

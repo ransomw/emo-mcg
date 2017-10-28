@@ -44,13 +44,20 @@ the `lein repl` command is the main point of entry for development.
 In particular, the following functions are available:
 
 ```clojure
-(rtest) ;; reload and run tests
-(rdb) ;; database reset
-(run) ;; run data collection setup w/ figwheel ... see localhost:3449
-(stop) ;; stop figwheel
-(run-devcards) ;; run devcards "test", on 3449 again
-(brep) ;; browser repl --- available whenever figwheel is spinning
+(run-all-tests) ;; reload and run tests
+(go) ;; run data collection setup ... see localhost:10555
+(go-devcards) ;; run devcards "test", on 3449
+(stop) ;; stop a running system
 ```
+
+It's possible to build and run a standalone `.jar` file with
+
+```shell
+exp$ lein uberjar
+exp$ java -jar target/emcg.jar
+```
+
+but no configuration or database operations are included.
 
 ### thanks
 

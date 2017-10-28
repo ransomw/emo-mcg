@@ -3,10 +3,11 @@
    [clojure.string :as s]
    [clojure.set :as set]
    [hugsql.core :as hugsql]
-   [emcg.util :refer [partition-list-of-maps]]
-   [emcg.db.expone-hug :as hug]
-   [emcg.expone :refer [exp-stim-config]]
-   [emcg.util :refer [rand-multilist]]
+   [emcg.db.util
+    :refer [partition-list-of-maps
+            rand-multilist
+            ]]
+   [emcg.db.expone-defs :refer [exp-stim-config]]
    ))
 
 ;; todo: don't allow same index for both A and V

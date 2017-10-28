@@ -7,7 +7,9 @@
      routes defroutes context]]
    [compojure.route :refer [resources]]
    [compojure.coercions :refer [as-int]]
-   [emcg.hroutes :refer [load-static-asset make-edn-resp route-print]]
+   [emcg.routes.helpers
+    :refer [load-static-asset
+            make-edn-resp]]
    [emcg.db.core :as db]
    [emcg.routes.expone-munge :as m]
    ))
@@ -21,16 +23,16 @@
      :body (load-static-asset asset-path)
      }))
 
-(defn routes-expone []
+(defn routes-expone [{db :db}]
   (routes
    ;; (GET "/exp/:id" [id] (db/get-exp id))
    (POST "/exp" _
-         (let [exp-id (db/init-exp! *num-emo-stims*)]
+         (let [exp-id (db/init-exp! db *num-emo-stims*)]
            (if exp-id
              (make-edn-resp
               {:id exp-id
                :defn (m/shape-expone-data
-                      (db/get-exp exp-id))})
+                      (db/get-exp db exp-id))})
              (make-edn-resp
               {:msg "init epxeriment databse fail"
                :data {:num-emo-stims *num-emo-stims*}}
@@ -38,7 +40,7 @@
 
    (GET "/exp/:exp-id/emo/:emo-id"
         [exp-id :<< as-int emo-id :<< as-int]
-        (let [emo-filename (m/get-emo-filename (db/get-exp exp-id)
+        (let [emo-filename (m/get-emo-filename (db/get-exp db exp-id)
                                                emo-id)]
           (if emo-filename
             (make-stim-resp emo-filename)
@@ -52,7 +54,7 @@
 
    (GET "/exp/:exp-id/emo/:emo-id/mcg/:mcg-id"
         [exp-id :<< as-int emo-id :<< as-int mcg-id :<< as-int]
-        (let [mcg-filename (m/get-mcg-filename (db/get-exp exp-id)
+        (let [mcg-filename (m/get-mcg-filename (db/get-exp db exp-id)
                                              emo-id mcg-id)]
           (if mcg-filename
             (make-stim-resp mcg-filename)
@@ -68,7 +70,7 @@
           mcg-id :<< as-int
           ;; compojure coercions only apply to strings
           idx-resp]
-         (if (not (nil? (db/set-mcg-res! mcg-id idx-resp)))
+         (if (not (nil? (db/set-mcg-res! db mcg-id idx-resp)))
            (make-edn-resp {})
            (make-edn-resp
             {:msg "failed to store mcg resp"

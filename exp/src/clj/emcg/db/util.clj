@@ -1,4 +1,4 @@
-(ns emcg.util)
+(ns emcg.db.util)
 
 (defn partition-list-of-maps [list-of-maps partition-key]
   (map ;; return a list

@@ -1,34 +1,45 @@
 (ns emcg.routes-test
   (:require
-   [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
-   [ring.middleware.format :refer [wrap-restful-format]]
-
    [clojure.test :refer :all]
    [clojure.edn :as edn]
    [clojure.string :as str]
+   [com.stuartsierra.component :as component]
+   [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
+   [ring.middleware.format :refer [wrap-restful-format]]
    [ring.mock.request :as mock]
-   [emcg.server :as s]
+
    [emcg.routes.expone :as r]
    [emcg.routes.expone-munge :refer [shape-expone-data]]
+   [emcg.config :refer [config]]
+   [emcg.db.component :refer [new-database]]
    [emcg.db.core :as db]
-   [emcg.expone :refer [exp-stim-config]]
-   [emcg.db-test :refer [get-mcg-entry]]
+   [emcg.db.expone :as eone]
+   [emcg.db.expone-defs :refer [exp-stim-config]]
    ))
 
-(def test-handler
+(def ^{:dynamic true} *db*)
+(def ^{:dynamic true} *test-handler*)
+
+(defn make-test-handler []
   (->
-   (r/routes-expone)
+   (r/routes-expone {:db *db*})
    (wrap-defaults api-defaults)
    (wrap-restful-format :format [:edn])
    ))
 
 (defn routes-fixture [f]
-  (db/reset-db!)
-  (f)
-  ; no teardown
-  )
+  (binding [*db* (component/start
+                  (new-database (:db-spec (config))))]
+    (binding [*test-handler* (make-test-handler)]
+      (db/reset-db! *db*)
+      (f))
+    (component/stop *db*)
+    ))
 
 (use-fixtures :each routes-fixture)
+
+(defn get-mcg-entry [mcg-id]
+  (eone/get-mcg-entry (:connection *db*) mcg-id))
 
 (defn check-exp-defn [exp-defn]
   (is (seq? exp-defn))
@@ -60,7 +71,7 @@
   (is (= (count exp-defn) (count (set (map :emo-id exp-defn))))))
 
 (deftest init-exp-test
-  (let [res (test-handler
+  (let [res (*test-handler*
              (mock/request :post "/exp"))
         body (edn/read-string (:body res))]
     (is (not (nil? res)))
@@ -76,7 +87,7 @@
       )))
 
 (deftest get-stim-data-test
-  (let [res (test-handler
+  (let [res (*test-handler*
              (mock/request :post "/exp"))
         body (edn/read-string (:body res))
         {exp-id :id exp-defn :defn} body]
@@ -90,10 +101,10 @@
                         (str "/exp/" exp-id "/emo/" emo-id "/mcg/"))
                mcg-ids)
               emo-res
-              (test-handler
+              (*test-handler*
                (mock/request :get (str "/exp/" exp-id "/emo/" emo-id)))
               mcg-resps
-              (map #(test-handler (mock/request :get %)) mcg-endpoints)
+              (map #(*test-handler* (mock/request :get %)) mcg-endpoints)
               check-vid-resp
               (fn [res]
                 (is (= "video"
@@ -108,18 +119,18 @@
     ))
 
 (deftest init-exp-over-the-wire-test
-  (let [res (test-handler
+  (let [res (*test-handler*
              (mock/request :post "/exp"))
         body (edn/read-string (:body res))
         {exp-id :id exp-defn-http :defn} body
-        exp-defn-db (db/get-exp exp-id)]
+        exp-defn-db (db/get-exp *db* exp-id)]
     (= (shape-expone-data exp-defn-db)
        exp-defn-http)
     ))
 
 (deftest shape-expone-data-test
-  (let [exp-id (db/init-exp! r/*num-emo-stims*)
-        exp-defn-db (db/get-exp exp-id)
+  (let [exp-id (db/init-exp! *db* r/*num-emo-stims*)
+        exp-defn-db (db/get-exp *db* exp-id)
         exp-defn-reshaped (shape-expone-data exp-defn-db)]
     (check-exp-defn exp-defn-reshaped)
     (->>
@@ -135,7 +146,7 @@
     ))
 
 (deftest mcg-resp-test
-  (let [res-init-exp (test-handler
+  (let [res-init-exp (*test-handler*
                       (mock/request :post "/exp"))
         body (edn/read-string (:body res-init-exp))
         {exp-id :id exp-defn :defn} body
@@ -145,7 +156,7 @@
         post-resp-url (str/join ["/exp/" exp-id "/emo/" emo-id
                                  "/mcg/" mcg-id "/resp"])
         mcg-entry-before (get-mcg-entry mcg-id)
-        res (test-handler
+        res (*test-handler*
              (-> (mock/request :post post-resp-url)
                  (mock/header :content-type "application/edn")
                  ;; without casting to a string, ring-mock

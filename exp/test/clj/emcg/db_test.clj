@@ -1,29 +1,36 @@
 (ns emcg.db-test
   (:require
    [clojure.test :refer :all]
-   [emcg.config :refer [db-spec]]
+   [com.stuartsierra.component :as component]
+
+   [emcg.config :refer [config]]
+   [emcg.db.component :refer [new-database]]
    [emcg.db.core :as db]
    [emcg.db.expone :as eone]
-   [emcg.expone :refer [exp-stim-config]]
+   [emcg.db.expone-defs :refer [exp-stim-config]]
    ))
 
+(def ^{:dynamic true} *db*)
+
 (defn db-fixture [f]
-  (db/reset-db!)
-  (f)
-  ; no teardown
-  )
+  (binding [*db* (component/start
+                  (new-database (:db-spec (config))))]
+    (db/reset-db! *db*)
+    (f)
+    (component/stop *db*)
+    ))
 
 (use-fixtures :each db-fixture)
 
 (def num-emo-stim 2)
 
 (defn get-mcg-entry [mcg-id]
-  (eone/get-mcg-entry db-spec mcg-id))
+  (eone/get-mcg-entry (:connection *db*) mcg-id))
 
 (deftest init-exp-test
-  (let [exp-id (db/init-exp! num-emo-stim)]
+  (let [exp-id (db/init-exp! *db* num-emo-stim)]
     (is (integer? exp-id))
-    (let [exp-defn (db/get-exp exp-id)]
+    (let [exp-defn (db/get-exp *db* exp-id)]
       (is (seq? exp-defn))
       (is (= num-emo-stim (count exp-defn)))
       (is (= (set (range (count exp-defn)))
@@ -65,8 +72,8 @@
     )))
 
 (deftest mcg-res-test
-  (let [exp-id (db/init-exp! num-emo-stim)]
-    (let [{:keys [mcg-id idx-v]} (-> (db/get-exp 1)
+  (let [exp-id (db/init-exp! *db* num-emo-stim)]
+    (let [{:keys [mcg-id idx-v]} (-> (db/get-exp *db* 1)
                                      (first)
                                      (get :mcg-trials)
                                      (first))]
@@ -76,21 +83,21 @@
                (set [:idx-a-stim :idx-v-stim :idx-resp])))
         (is (nil? (:idx-resp mcg-entry)))
         )
-      (is (integer? (db/set-mcg-res! mcg-id idx-v)))
+      (is (integer? (db/set-mcg-res! *db* mcg-id idx-v)))
       (let [mcg-entry (get-mcg-entry mcg-id)]
         (is (= idx-v (:idx-resp mcg-entry)))
         )
       )))
 
 (deftest reset-db!-test
-  (let [exp-id (db/init-exp! num-emo-stim)
-        {:keys [mcg-id idx-v]} (-> (db/get-exp 1)
+  (let [exp-id (db/init-exp! *db* num-emo-stim)
+        {:keys [mcg-id idx-v]} (-> (db/get-exp *db* 1)
                                    (first)
                                    (get :mcg-trials)
                                    (first))]
-    (is (not (= 0 (count (db/get-exp exp-id)))))
+    (is (not (= 0 (count (db/get-exp *db* exp-id)))))
     (is (not (nil? (get-mcg-entry mcg-id))))
-    (db/reset-db!)
-    (is (= 0 (count (db/get-exp exp-id))))
+    (db/reset-db! *db*)
+    (is (= 0 (count (db/get-exp *db* exp-id))))
     (is (nil? (get-mcg-entry mcg-id)))
     ))

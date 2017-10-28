@@ -1,4 +1,4 @@
-(ns emcg.expone)
+(ns emcg.db.expone-defs)
 
 ;; experiment stimuli consist of:
 ;; -- a number of emotionally-charged audio-visual stimuli

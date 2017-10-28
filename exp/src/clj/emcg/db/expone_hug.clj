@@ -1,4 +1,4 @@
-(ns emcg.db.expone-hug
+(ns emcg.db.expone_hug
   (:require
    [hugsql.core :as hugsql]
    ))

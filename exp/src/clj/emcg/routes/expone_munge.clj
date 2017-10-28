@@ -1,8 +1,9 @@
 (ns emcg.routes.expone-munge
   (:require
    [clojure.set :refer [rename-keys]]
-   [emcg.hroutes :refer [route-print]]
-   [emcg.expone :refer [emo-stim-filenames mcg-stim-filenames]]
+   [emcg.db.expone-defs
+    :refer [emo-stim-filenames
+            mcg-stim-filenames]]
    ))
 
 ;;;; various data-munging -- glue between db api and http api

@@ -2,38 +2,46 @@
   (:require
    [clojure.string :as s]
    [clojure.test :refer :all]
+   [com.stuartsierra.component :as component]
    [doo.core :as doo]
    [cljs.build.api :as cljs]
    [ring.adapter.jetty :refer [run-jetty]]
    [ring.middleware.cors :refer [wrap-cors]]
-   [emcg.db-test :refer [get-mcg-entry]]
+
+   [emcg.application]
+   [emcg.config :refer [config]]
    [emcg.db.core :as db]
-   [emcg.server :refer [http-handler]]
+   [emcg.db.expone :as eone]
    ))
 
-(def http-handler-cors
-  (-> http-handler
-      (wrap-cors
-       :access-control-allow-origin [#".*"]
-       :access-control-allow-methods [:get :put :post :delete])
-      ))
+(defn test-system []
+  (emcg.application/app-system
+   ;; (config)
+   (config :doo-test true)
+   )
+  )
 
-;; server start/stop lifted from dnolen's SO post
-(defonce server
-  ;; ??? what's this `#'` syntax?
-  (run-jetty #'http-handler-cors {:port 3333 :join? false}))
+(def ^{:dynamic true} *db*)
 
-;; overall test strategy is lifted from
-;; https://github.com/bensu/doo/wiki/End-to-end-testing-example
+;; (def http-handler-cors
+;;   (-> http-handler
+;;       (wrap-cors
+;;        :access-control-allow-origin [#".*"]
+;;        :access-control-allow-methods [:get :put :post :delete])
+;;       ))
+
+
 (use-fixtures :each
   (fn [f]
-    (db/reset-db!)
-    ;; 1. Start the backend system at port 3333
-    (.start server)
-    ;; ??? is this
-    ;; (assoc :nrepl {}) ;; Mock unnecessary dependencies before start
-    (f) ;; 2. run the test, i,e. end-to-end-suite
-    (.stop server))) ;; 3. Stop the backend system
+    (let [system (component/start (test-system))]
+      (binding [*db* (:db system)]
+        (db/reset-db! *db*)
+        (f))
+      (component/stop system))
+    ))
+
+(defn get-mcg-entry [mcg-id]
+  (eone/get-mcg-entry (:connection *db*) mcg-id))
 
 (defn run-doo-phantom [cljs-runner-main]
   (let [compiler-opts {:main cljs-runner-main
@@ -72,8 +80,8 @@
 
 (deftest e2e-suite-create-exp
   (is (zero? (run-doo-phantom 'emcg.e2e-runner-create-exp)))
-  (is (not (= 0 (count (db/get-exp 1)))))
-  (is (= 0 (count (db/get-exp 0))))
+  (is (not (= 0 (count (db/get-exp *db* 1)))))
+  (is (= 0 (count (db/get-exp *db* 0))))
   )
 
 (deftest e2e-suite-add-mcg-res
